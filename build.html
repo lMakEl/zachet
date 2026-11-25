@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; font-src 'self' data: blob:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://openrouter.ai; worker-src 'self' blob:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<meta name="robots" content="noindex">
+<title>Зачёт: сборка демо</title>
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+<script type="module" src="js/build.js"></script>
+</head>
+<body>
+<header class="top"><a class="logo" href="./">Зачёт</a><div class="top-r"><span id="spend" class="spend"></span></div></header>
+<main id="app"></main>
+<footer class="foot"><p>Текст примера отправляется в OpenRouter. Ключ хранится только в этом браузере.</p></footer>
+</body>
+</html>

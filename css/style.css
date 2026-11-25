@@ -201,6 +201,10 @@ main { padding: clamp(18px, 2.4vw, 44px) clamp(16px, 4vw, 72px); width: 100%; }
   .stage { aspect-ratio: 4 / 5; } .screen.wide { max-width: none; } .notes { font-size: calc(5.4cqw * var(--k)); padding: 4cqh 4cqw 25cqh 11cqw; } .with-img .nbody { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); } .notes { background-size: auto, 5cqw 5cqw, 5cqw 5cqw, auto; }
   .scene-nav { order: 3; flex-basis: 100%; } .top { flex-wrap: wrap; }
 }
+a.btn { text-decoration: none; display: inline-block; }
+div.selfcheck h2 { font-size: 1.05em; }
+/* телефон боком: сцена во всю ширину */
+@media (max-height: 560px) and (min-width: 560px) { .screen.wide { max-width: none; } main { padding-top: 10px; } .player .stage { aspect-ratio: 16 / 9; max-height: calc(100vh - 4.2em); width: 100%; } }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; transition-duration: .01ms !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
 }

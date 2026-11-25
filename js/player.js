@@ -1,4 +1,4 @@
-import { h, $, $$, sleep, LANG } from './util.js';
+import { h, $, $$, keepAwake } from './util.js';
 import { quoteBoxes } from './extract.js';
 import { writeScene } from './lecture.js';
 import { synth, systemVoice } from './voice.js';
@@ -20,6 +20,7 @@ export class Player {
     this.audio = new Audio(); this.audio.preload = 'auto';
     this.hasOriginal = lecture.pages.some(p => p.render);
     if (!this.hasOriginal) this.view = 'notes';
+    keepAwake(true);
     this.build();
     this.onKey = e => this.key(e);
     document.addEventListener('keydown', this.onKey);
@@ -62,10 +63,11 @@ export class Player {
     else if (e.code === 'ArrowLeft') { e.preventDefault(); this.step(-1); }
     else if (e.key === 'f' || e.key === 'а') this.full();
   }
-  full() { if (document.fullscreenElement) document.exitFullscreen(); else this.box.requestFullscreen?.().catch(() => {}); }
+  full() { if (document.fullscreenElement) document.exitFullscreen(); else this.box.requestFullscreen?.().then(() => screen.orientation?.lock?.('landscape').catch(() => {})).catch(() => {}); }
 
   start() { this.playing = true; this.setPlayIcon(); this.go(0, 0); }
   toggle() {
+    this.busy('');
     if (this.playing) {
       this.playing = false; this.setPlayIcon(); this.note('pause');
       if (this.mode === 'audio') this.audio.pause(); else { this.token++; window.speechSynthesis?.cancel(); }
@@ -87,7 +89,7 @@ export class Player {
   }
   stopSound() { this.audio.pause(); window.speechSynthesis?.cancel(); clearTimeout(this.timer); }
   destroy() {
-    this.token++; this.playing = false; this.dead = true; this.stopSound();
+    this.token++; this.playing = false; this.dead = true; keepAwake(false); this.stopSound();
     document.removeEventListener('keydown', this.onKey); removeEventListener('resize', this.onResize); document.removeEventListener('fullscreenchange', this.onResize);
     if (document.fullscreenElement) document.exitFullscreen();
   }
@@ -156,7 +158,7 @@ export class Player {
     a.src = url; a.playbackRate = this.speed;
     try { await a.play(); a.playbackRate = this.speed; } catch (e) {
       if (my !== this.token || e.name === 'AbortError') return;
-      if (e.name === 'NotAllowedError') { this.playing = false; this.setPlayIcon(); this.busy('Нажмите пробел, чтобы включить звук'); }
+      if (e.name === 'NotAllowedError') { this.playing = false; this.setPlayIcon(); this.busy('Нажмите жёлтую кнопку, чтобы включить звук'); }
     }
   }
   playFallback(fr, f, my) {
@@ -172,7 +174,7 @@ export class Player {
     speechSynthesis.speak(u);
   }
   finish() {
-    this.token++; this.stopSound(); this.playing = false; this.ended = true; this.setPlayIcon(); this.note('finish'); this.sub.textContent = '';
+    this.token++; this.stopSound(); this.playing = false; this.ended = true; this.setPlayIcon(); this.note('finish'); keepAwake(false); this.sub.textContent = '';
     this.rendered = null;
     this.stage.replaceChildren(h('div', { class: 'stage-end' }, h('p', { class: 'stage-end-t' }, 'Лекция окончена'), h('div', { class: 'row' }, h('button', { class: 'btn', type: 'button', onclick: () => { this.playing = true; this.setPlayIcon(); this.go(0, 0); } }, 'Слушать сначала'), h('button', { class: 'btn ghost', type: 'button', onclick: () => this.onExit() }, 'К тестам'))));
   }

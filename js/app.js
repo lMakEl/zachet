@@ -1,5 +1,6 @@
 import { CONFIG } from './config.js';
-import { $, h, questionsWord, plural, LANG } from './util.js';
+import { $, h, questionsWord, plural, LANG, keepAwake } from './util.js';
+import * as store from './store.js';
 import * as auth from './auth.js';
 import { onSpend, keyInfo, spend } from './api.js';
 import { extractFile, FileError } from './extract.js';
@@ -11,7 +12,7 @@ import { saveDemo } from './devtools.js';
 
 const app = $('#app');
 const state = { lecture: null, files: [], quizzes: {}, scenes: {}, pick: { mcq: 20, tf: 20, voice: 'short' }, jobs: {}, errors: {}, short: {}, notice: '', demoBank: null };
-let current = null;
+let current = null, localDemo = null;
 window.zachet = { state, get current() { return current; }, spend, saveDemo: () => saveDemo(state) };
 
 const fresh = () => { Object.assign(state, { lecture: null, quizzes: {}, scenes: {}, jobs: {}, errors: {}, short: {}, notice: '', demoBank: null }); };
@@ -67,7 +68,7 @@ function home() {
   const demoBtn = h('button', { class: 'btn ghost', type: 'button', onclick: openDemo }, 'Открыть демо без ключа');
 
   const intro = !L ? h('section', { class: 'intro' }, hero(),
-    h('div', { class: 'intro-t' }, h('h1', {}, 'Загрузите лекцию и проверьте себя до зачёта'), h('p', { class: 'lead' }, 'Нейросеть прочитает файл, составит тест с вариантами ответов, тест «правильно / неправильно» и расскажет лекцию голосом. К каждому вопросу есть пояснение и цитата.'), CONFIG.demoReady ? h('div', { class: 'row' }, demoBtn) : null)) : null;
+    h('div', { class: 'intro-t' }, h('h1', {}, 'Загрузите лекцию и проверьте себя до зачёта'), h('p', { class: 'lead' }, 'Нейросеть прочитает файл, составит тест с вариантами ответов, тест «правильно / неправильно» и расскажет лекцию голосом. К каждому вопросу есть пояснение и цитата.'), CONFIG.demoReady || localDemo ? h('div', { class: 'row' }, demoBtn) : null)) : null;
 
   const files = L ? h('ul', { class: 'files' }, L.docs.map((d, i) => h('li', {}, h('b', { text: d.name }), h('span', {}, d.info), L.demo ? null : h('button', { class: 'txt', type: 'button', 'aria-label': 'Убрать ' + d.name, onclick: () => removeDoc(i) }, 'Убрать')))) : null;
 
@@ -157,11 +158,11 @@ function redrawJob(key) {
   const old = $('.job', row), el = jobBox(key); if (old && el) old.replaceWith(el); else home();
 }
 async function job(key, fn, again) {
-  if (!auth.hasKey()) { state.notice = 'Чтобы работать со своей лекцией, войдите через OpenRouter.' + (CONFIG.demoReady ? ' Демо работает без ключа.' : ''); home(); window.scrollTo(0, 0); return; }
-  state.errors[key] = null; state.short[key] = null; state.notice = ''; state.jobs[key] = { text: 'Начинаю' }; const L = state.lecture; home();
+  if (!auth.hasKey()) { state.notice = 'Чтобы работать со своей лекцией, войдите через OpenRouter.' + (CONFIG.demoReady || localDemo ? ' Демо работает без ключа.' : ''); home(); window.scrollTo(0, 0); return; }
+  state.errors[key] = null; state.short[key] = null; state.notice = ''; state.jobs[key] = { text: 'Начинаю' }; const L = state.lecture; home(); keepAwake(true);
   try { await fn(L, progress(key)); }
   catch (e) { if (state.lecture === L) { console.warn(e); state.errors[key] = { message: e.message || 'Что-то пошло не так.', again }; } }
-  finally { if (state.lecture === L) { state.jobs[key] = null; if (!current) home(); } }
+  finally { if (state.lecture === L) { state.jobs[key] = null; if (!current) { keepAwake(false); home(); } } }
 }
 async function facts(L, say) {
   if (L.facts) return;
@@ -194,7 +195,7 @@ async function openLecture() {
   const show = scenes => {
     const box = h('div', {});
     enter(h('div', { class: 'screen wide' }, backBar(L.docs.map(d => d.name).join(', ')), box));
-    const p = new Player(box, L, scenes, { view: L.docs.every(d => d.view === 'original') ? 'original' : 'notes', onExit: home });
+    const p = new Player(box, L, scenes, { view: innerWidth > 700 && L.docs.every(d => d.view === 'original') ? 'original' : 'notes', onExit: home });
     current = p; p.start();
   };
   if (isDemo()) { show(state.demoBank.scenes); return; }
@@ -216,12 +217,12 @@ async function openLecture() {
 async function openDemo() {
   state.notice = 'Открываю демо…'; home();
   try {
-    const [d, f] = await Promise.all([fetch('demo/demo.json').then(r => { if (!r.ok) throw 0; return r.json(); }), fetch('demo/lecture.pdf').then(r => { if (!r.ok) throw 0; return r.blob(); })]);
+    const [d, f] = await Promise.all([CONFIG.demoReady ? fetch('demo/demo.json').then(r => { if (!r.ok) throw 0; return r.json(); }) : localDemo.data, fetch('demo/lecture.pdf').then(r => { if (!r.ok) throw 0; return r.blob(); })]);
     const r = await extractFile(new File([f], d.name), 0, 1);
-    r.doc.info = `${r.doc.pages} слайдов, пример внутри сайта`;
+    r.doc.info = `${r.doc.pages} слайдов, готовый пример`;
     fresh();
     state.lecture = { demo: true, docs: [r.doc], pages: r.pages, facts: d.facts, lang: d.lang };
-    state.demoBank = { mcq: d.mcq, tf: d.tf, scenes: d.scenes.map(s => ({ ...s, fragments: s.fragments.map(x => ({ ...x, url: x.audio ? 'demo/' + x.audio : null })) })) };
+    state.demoBank = { mcq: d.mcq, tf: d.tf, scenes: d.scenes.map(s => ({ ...s, fragments: s.fragments.map(x => ({ ...x, url: !x.audio ? null : CONFIG.demoReady ? 'demo/' + x.audio : URL.createObjectURL(localDemo.audio[x.audio]) })) })) };
   } catch { state.notice = 'Демо не загрузилось. Обновите страницу.'; }
   home();
 }
@@ -231,8 +232,10 @@ $('#logo').addEventListener('click', e => { e.preventDefault(); home(); });
 addEventListener('dragover', e => e.preventDefault());
 addEventListener('drop', e => e.preventDefault());
 (async () => {
+  if (!CONFIG.demoReady) localDemo = await store.get('demo').catch(() => null);
   home();
   const r = await auth.finishLogin();
   if (r) { state.notice = r.error || 'Вход выполнен. Теперь добавьте лекцию.'; home(); }
   drawAccount();
+  if (location.hash === '#demo' && (CONFIG.demoReady || localDemo)) { history.replaceState(null, '', location.pathname); openDemo(); }
 })();

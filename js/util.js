@@ -17,6 +17,17 @@ export function h(tag, props = {}, ...kids) {
   return el;
 }
 
+// Не даёт экрану погаснуть, пока идёт сборка или лекция.
+let lock = null, wantLock = false;
+export async function keepAwake(on) {
+  wantLock = on;
+  try {
+    if (on && !lock && document.visibilityState === 'visible') { lock = await navigator.wakeLock?.request('screen'); lock?.addEventListener('release', () => { lock = null; }); }
+    else if (!on && lock) { await lock.release(); lock = null; }
+  } catch { /* экран погаснет по обычным настройкам */ }
+}
+document.addEventListener('visibilitychange', () => { if (wantLock) keepAwake(true); });
+
 export const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 export function shuffle(a) {

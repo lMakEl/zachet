@@ -8,7 +8,7 @@ function pdfjs() {
   return pdfjsP;
 }
 let zipP;
-function jszip() {
+export function jszip() {
   zipP ||= new Promise((ok, no) => {
     if (window.JSZip) return ok(window.JSZip);
     const s = document.createElement('script'); s.src = BASE + 'vendor/jszip/jszip.min.js';
