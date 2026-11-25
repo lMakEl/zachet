@@ -238,13 +238,13 @@ export function selfCheck(quiz, lecture) {
   add('Вопросов', `${it.length} из ${quiz.asked}`, it.length === quiz.asked);
   if (quiz.kind === 'tf') {
     const f = it.filter(q => !q.answer).length, pct = Math.round(f / it.length * 100);
-    add('Ложных утверждений', `${f} (${pct} %)`, pct >= 40 && pct <= 60);
+    add('Ложных утверждений', `${f} (${pct}\u00a0%)`, pct >= 40 && pct <= 60);
   } else {
     const c = [0, 1, 2, 3].map(k => it.filter(q => q.answer === k).length);
-    add('Верный ответ по позициям', 'АБВГ'.split('').map((l, i) => `${l} ${c[i]}`).join(', '), Math.max(...c) - Math.min(...c) <= 1);
+    add('Верный ответ по позициям', 'АБВГ'.split('').map((l, i) => `${l}\u00a0${c[i]}`).join(', '), Math.max(...c) - Math.min(...c) <= 1);
     add('Вариантов у каждого вопроса', it.every(q => new Set(q.options).size === 4) ? '4 разных' : 'есть повторы', it.every(q => new Set(q.options).size === 4));
     const lg = it.filter(q => q.options[q.answer].length === Math.max(...q.options.map(o => o.length))).length;
-    add('Верный вариант — самый длинный', `${lg} из ${it.length} (${Math.round(lg / it.length * 100)} %)`, lg / it.length <= 0.5);
+    add('Верный вариант — самый длинный', `${lg} из ${it.length} (${Math.round(lg / it.length * 100)}\u00a0%)`, lg / it.length <= 0.5);
   }
   const byId = new Map(lecture.pages.map(p => [p.id, p]));
   const text = it.filter(q => !q.image && !q.extra);

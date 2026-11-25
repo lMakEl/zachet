@@ -67,7 +67,7 @@ function home() {
   const demoBtn = h('button', { class: 'btn ghost', type: 'button', onclick: openDemo }, 'Открыть демо без ключа');
 
   const intro = !L ? h('section', { class: 'intro' }, hero(),
-    h('div', { class: 'intro-t' }, h('h1', {}, 'Загрузите лекцию и проверьте себя до зачёта'), h('p', { class: 'lead' }, 'Нейросеть прочитает файл, составит тест с вариантами ответов, тест «правильно / неправильно» и расскажет лекцию голосом. К каждому вопросу есть пояснение и цитата.'), h('div', { class: 'row' }, demoBtn))) : null;
+    h('div', { class: 'intro-t' }, h('h1', {}, 'Загрузите лекцию и проверьте себя до зачёта'), h('p', { class: 'lead' }, 'Нейросеть прочитает файл, составит тест с вариантами ответов, тест «правильно / неправильно» и расскажет лекцию голосом. К каждому вопросу есть пояснение и цитата.'), CONFIG.demoReady ? h('div', { class: 'row' }, demoBtn) : null)) : null;
 
   const files = L ? h('ul', { class: 'files' }, L.docs.map((d, i) => h('li', {}, h('b', { text: d.name }), h('span', {}, d.info), L.demo ? null : h('button', { class: 'txt', type: 'button', 'aria-label': 'Убрать ' + d.name, onclick: () => removeDoc(i) }, 'Убрать')))) : null;
 
@@ -157,7 +157,7 @@ function redrawJob(key) {
   const old = $('.job', row), el = jobBox(key); if (old && el) old.replaceWith(el); else home();
 }
 async function job(key, fn, again) {
-  if (!auth.hasKey()) { state.notice = 'Чтобы работать со своей лекцией, войдите через OpenRouter. Демо работает без ключа.'; home(); window.scrollTo(0, 0); return; }
+  if (!auth.hasKey()) { state.notice = 'Чтобы работать со своей лекцией, войдите через OpenRouter.' + (CONFIG.demoReady ? ' Демо работает без ключа.' : ''); home(); window.scrollTo(0, 0); return; }
   state.errors[key] = null; state.short[key] = null; state.notice = ''; state.jobs[key] = { text: 'Начинаю' }; const L = state.lecture; home();
   try { await fn(L, progress(key)); }
   catch (e) { if (state.lecture === L) { console.warn(e); state.errors[key] = { message: e.message || 'Что-то пошло не так.', again }; } }

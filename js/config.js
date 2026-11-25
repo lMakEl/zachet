@@ -12,6 +12,7 @@ export const CONFIG = {
   voiceParallel: 3,     // одновременных запросов озвучки
   reserve: 0.1,         // запас вопросов
   counts: [20, 30, 35],
+  demoReady: false,     // включить, когда в demo/ лежат банк вопросов и озвучка
   chunkChars: 5000,     // размер части лекции для карты фактов
   chunkImages: 6,
   visualTextLimit: 120, // меньше знаков на странице — отправляем её картинкой
