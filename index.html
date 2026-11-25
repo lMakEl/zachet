@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self'; font-src 'self' data: blob:; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://openrouter.ai; worker-src 'self' blob:; base-uri 'none'; form-action 'none'">
+<meta name="referrer" content="strict-origin-when-cross-origin">
+<title>Зачёт: тесты и озвученная лекция по вашему файлу</title>
+<meta name="description" content="Загрузите лекцию и получите тест с вариантами ответов, тест «правильно / неправильно» и озвученную анимированную лекцию.">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="css/style.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="./" id="logo">Зачёт</a>
+  <div class="top-r"><span id="spend" class="spend" hidden></span><span id="account" class="account"></span></div>
+</header>
+<main id="app"></main>
+<footer class="foot">
+  <p>Текст лекции отправляется в OpenRouter, чтобы модели составили по нему тест и лекцию. Ключ хранится только в этом браузере.</p>
+</footer>
+<noscript>Для работы нужен JavaScript.</noscript>
+</body>
+</html>
